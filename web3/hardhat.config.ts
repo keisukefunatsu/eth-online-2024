@@ -4,6 +4,8 @@ import * as dotenv from 'dotenv'
 
 dotenv.config()
 
+import "./tasks/transferCCIP"
+
 const PRIVATE_KEY = process.env.PRIVATE_KEY ?? ""
 
 const config: HardhatUserConfig = {
