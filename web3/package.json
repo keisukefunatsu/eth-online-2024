@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.9",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@chainlink/local": "^0.2.1",
+    "dotenv": "^16.4.5"
+  }
+}
