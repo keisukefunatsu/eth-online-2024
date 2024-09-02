@@ -29,13 +29,16 @@ task("transferCCIPFee", "Transfer tokens using CCIP")
         console.log("Approval transaction confirmed");
 
         const tx = await tokenTransferor.transferTokensPayLINK(
-            BigInt(taskArgs.destinationChainSelector),
             taskArgs.receiver,
             taskArgs.token,
             amount
-        );
+        ).catch((error) => {
+            console.log(error)
+        }).then()
 
-        console.log(`Transaction sent: ${tx.hash}`);
-        await tx.wait();
-        console.log("Transaction confirmed");
+        if (tx) {
+            console.log(`Transaction sent: ${tx.hash}`);
+            await tx.wait();
+            console.log("Transaction confirmed");
+        }
     });

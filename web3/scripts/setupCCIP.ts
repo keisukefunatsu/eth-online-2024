@@ -13,7 +13,7 @@ async function main() {
         console.log(`Deploying on ${CHAIN_NAME} with account: ${await deployer.getAddress()}`);
 
         // Deploy token transferor
-        const TokenTransferor = await hre.ethers.getContractFactory("TokenTransferor");
+        const TokenTransferor = await hre.ethers.getContractFactory("ProgrammableTokenTransfers");
         const tokenTransferor = await TokenTransferor.deploy(ROUTER_ADDRESS!, LINK_TOKEN_ADDRESS!);
         const deployResult = await tokenTransferor.waitForDeployment();
         console.log(`TokenTransferor deployed to: ${await deployResult.getAddress()} on ${CHAIN_NAME}`);
@@ -28,7 +28,7 @@ async function main() {
         }
 
         // send LINK token for fee token
-        const linkAmount = hre.ethers.parseUnits("0.1", 18); 
+        const linkAmount = hre.ethers.parseUnits("0.5", 18); 
         const linkToken = await hre.ethers.getContractAt("IERC20", LINK_TOKEN_ADDRESS);
         await linkToken.transfer(await tokenTransferor.getAddress(), linkAmount);
         console.log(`Transferred ${hre.ethers.formatUnits(linkAmount, 18)} LINK to TokenTransferor contract`);        
