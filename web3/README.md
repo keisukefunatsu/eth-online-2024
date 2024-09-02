@@ -11,3 +11,7 @@ yarn hardhat transferCCIPFee --network sepolia --token-transferor-address 0xC72f
 
 ## Links
 - https://ccip.chain.link/
+
+
+## Memo
+- Base-sepolia to amoy don't have lane.

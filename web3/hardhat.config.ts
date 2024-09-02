@@ -9,7 +9,19 @@ import "./tasks/transferCCIP"
 const PRIVATE_KEY = process.env.PRIVATE_KEY ?? ""
 
 const config: HardhatUserConfig = {
-    solidity: "0.8.24",
+    solidity: {
+        version: "0.8.24",
+        settings: {
+            viaIR: true,
+            optimizer: {
+                enabled: true,
+                runs: 200
+            },
+            debug: {
+                revertStrings: "debug" 
+            }
+        }
+    },
     networks: {
         amoy: {
             url: "https://polygon-amoy-bor-rpc.publicnode.com",
@@ -35,7 +47,7 @@ const config: HardhatUserConfig = {
     typechain: {
         outDir: 'typechain',
     },
-    
+
 };
 
 export default config;
