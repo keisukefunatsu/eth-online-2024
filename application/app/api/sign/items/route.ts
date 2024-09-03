@@ -10,9 +10,7 @@ export async function GET(req: NextRequest) {
     const indexService = new IndexService(env);
     const res = await indexService.queryAttestationList({
         page: 1,
-        schemaId,
-        // TODO: search parent attestationId when querying linked attestation
-        indexingValue: "",
+        indexingValue: "684"
     });
 
     const attestations = decodeAttestations(res)
