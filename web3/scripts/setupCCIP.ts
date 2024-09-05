@@ -13,8 +13,8 @@ async function main() {
         console.log(`Deploying on ${CHAIN_NAME} with account: ${await deployer.getAddress()}`);
 
         // Deploy token transferor
-        const TokenTransferor = await hre.ethers.getContractFactory("ProgrammableTokenTransfers");
-        const tokenTransferor = await TokenTransferor.deploy(ROUTER_ADDRESS!, LINK_TOKEN_ADDRESS!);
+        const TokenTransferor = await hre.ethers.getContractFactory("TokenTransferor");
+        const tokenTransferor = await TokenTransferor.deploy(ROUTER_ADDRESS, LINK_TOKEN_ADDRESS!);
         const deployResult = await tokenTransferor.waitForDeployment();
         console.log(`TokenTransferor deployed to: ${await deployResult.getAddress()} on ${CHAIN_NAME}`);
 

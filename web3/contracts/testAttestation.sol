@@ -9,7 +9,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract AttestTest {
     ISP public spContract;
-
+    uint64 public schemaId;  
     // イベントの定義
     event Debug(string message);
     event DebugUint256(uint256 value);
@@ -17,26 +17,28 @@ contract AttestTest {
 
     constructor(address _spContractAddress) {
         spContract = ISP(_spContractAddress);
+        schemaId = 456;
     }
 
     function testFlow(
-        uint64 attestationId
+        uint64 attestationId,
+        address to
     ) external returns (uint256, string memory) {
         Attestation memory attestation = spContract.getAttestation(
             attestationId
         );
 
-        (uint256 price, string memory key) = abi.decode(
+        (uint256 price, string memory key, string memory id) = abi.decode(
             attestation.data,
-            (uint256, string)
-        );        
+            (uint256, string, string)
+        );
 
         // Create a new attestation
-        bytes memory newData = abi.encode(10000000000000000, "ItemName");
+        bytes memory newData = abi.encode(key, id);
         bytes[] memory recipients = new bytes[](1);
-        recipients[0] = abi.encode(address(this));
+        recipients[0] = abi.encode(to);
         Attestation memory newAttestation = Attestation({
-            schemaId: attestation.schemaId,
+            schemaId: schemaId,
             attester: address(this),
             data: newData,
             validUntil: 0,
@@ -52,30 +54,11 @@ contract AttestTest {
             uint256(uint160(msg.sender)),
             20
         );
-        // TODO: Create Unique key for Query Owned Items
+        string memory uniqueKey = string(abi.encodePacked(sender, id));
+
         // Call the attest function
-        spContract.attest(newAttestation, sender, "", ""); // Ensure the parameters match the function signature
+        spContract.attest(newAttestation, uniqueKey, "", ""); // Ensure the parameters match the function signature
 
         return (price, key);
-    }
-
-    function uintToString(uint64 value) internal pure returns (string memory) {
-        // Convert uint64 to string
-        if (value == 0) {
-            return "0";
-        }
-        uint64 temp = value;
-        uint64 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint64(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
     }
 }

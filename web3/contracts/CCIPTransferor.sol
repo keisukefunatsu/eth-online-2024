@@ -6,12 +6,11 @@ import {OwnerIsCreator} from "@chainlink/contracts-ccip/src/v0.8/shared/access/O
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.3/contracts/token/ERC20/utils/SafeERC20.sol";
-
-/**
- * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
- * THIS IS AN EXAMPLE CONTRACT THAT USES UN-AUDITED CODE.
- * DO NOT USE THIS CODE IN PRODUCTION.
- */
+import {ISP} from "@ethsign/sign-protocol-evm/src/interfaces/ISP.sol";
+import {Attestation} from "@ethsign/sign-protocol-evm/src/models/Attestation.sol";
+import {Schema} from "@ethsign/sign-protocol-evm/src/models/Schema.sol";
+import {DataLocation} from "@ethsign/sign-protocol-evm/src/models/DataLocation.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title - A simple contract for transferring tokens across chains.
 contract TokenTransferor is OwnerIsCreator {
@@ -43,13 +42,26 @@ contract TokenTransferor is OwnerIsCreator {
 
     IERC20 private s_linkToken;
 
+    // sp contract address
+    ISP public spContract;
+    // schemaId for attestation
+    uint64 public schemaId;
+
     /// @notice Constructor initializes the contract with the router address.
     /// @param _router The address of the router contract.
     /// @param _link The address of the link contract.
-    constructor(address _router, address _link, address _paymentAddress) {
+    constructor(
+        address _router,
+        address _link,
+        address _paymentAddress,
+        address _spContractAddress,
+        uint64 _schemaId
+    ) {
         s_router = IRouterClient(_router);
         s_linkToken = IERC20(_link);
         paymentAddress = _paymentAddress;
+        spContract = ISP(_spContractAddress);
+        schemaId = _schemaId;
     }
 
     /// @dev Modifier that checks if the chain with the given destinationChainSelector is allowlisted.
@@ -90,7 +102,9 @@ contract TokenTransferor is OwnerIsCreator {
     function transferTokensPayLINK(
         uint64 _destinationChainSelector,
         address _token,
-        uint256 _amount
+        uint256 _amount,
+        address sign_to,
+        uint64 attestationId
     )
         external
         onlyOwner
@@ -131,6 +145,41 @@ contract TokenTransferor is OwnerIsCreator {
             evm2AnyMessage
         );
 
+        Attestation memory attestation = spContract.getAttestation(
+            attestationId
+        );
+
+        (uint256 price, string memory key, string memory id) = abi.decode(
+            attestation.data,
+            (uint256, string, string)
+        );
+
+        // Create a new attestation
+        bytes memory newData = abi.encode(id);
+        bytes[] memory recipients = new bytes[](1);
+        recipients[0] = abi.encode(sign_to);
+        Attestation memory newAttestation = Attestation({
+            schemaId: schemaId,
+            attester: address(this),
+            data: newData,
+            validUntil: 0,
+            linkedAttestationId: 0,
+            revoked: false,
+            attestTimestamp: 0,
+            revokeTimestamp: 0,
+            dataLocation: DataLocation.ONCHAIN,
+            recipients: recipients
+        });
+
+        string memory sender = Strings.toHexString(
+            uint256(uint160(msg.sender)),
+            20
+        );
+        string memory uniqueKey = string(abi.encodePacked(sender, id));
+
+        // Call the attest function
+        spContract.attest(newAttestation, uniqueKey, "", ""); // Ensure the parameters match the function signature
+
         // Emit an event with message details
         emit TokensTransferred(
             messageId,
@@ -145,7 +194,6 @@ contract TokenTransferor is OwnerIsCreator {
         // Return the message ID
         return messageId;
     }
-
 
     /// @notice Construct a CCIP message.
     /// @dev This function will create an EVM2AnyMessage struct with all the necessary information for tokens transfer.

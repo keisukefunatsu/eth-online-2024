@@ -9,19 +9,11 @@ async function main() {
     console.log('contract deployed to: ', await contract.getAddress())
 
 
-    // const contract = AttestTest__factory.connect("0xc72f2a1c5a87937735ccd702494c712aef99216b", deployer)
-    const a = await contract.testFlow(684).catch((error) => {
+    // const contract = AttestTest__factory.connect("0x7613252de56305A563d2Ba73E05B55BAe9a64ebc", deployer)
+    const a = await contract.testFlow(0x483, "0x08b6F364c1491815B87126d5ae900706C6E2D810").catch((error) => {
         console.log(error)
     })
-    // const abiCoder = new hre.ethers.AbiCoder();
-    // const data = abiCoder.decode(
-    //     [{ components: att.schema.data, 
-    //         type: "tuple" }],
-    //     a[9] as `0x${string}`
-    // );
-    // parsedData = data[0];
 
-    // console.log(decodedData)
     if(a) {
         console.log(a.hash)
     }
