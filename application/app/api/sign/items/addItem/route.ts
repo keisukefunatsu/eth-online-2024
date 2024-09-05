@@ -1,14 +1,14 @@
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { delegateSignAttestation, EvmChains, SignProtocolClient, SpMode } from "@ethsign/sp-sdk";
+import { DataLocationOnChain, delegateSignAttestation, EvmChains, SignProtocolClient, SpMode } from "@ethsign/sp-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { nanoid } from 'nanoid';
 
 export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Hello, world!" });
 }
 
 export async function POST(req: NextRequest) {
-    const env = process.env.ETH_NETWORK as 'testnet' | 'mainnet' ?? 'testnet'
     const privateKey = '0x' + process.env.PRIVATE_KEY as `0x${string}`
     const body = await req.json();
     if (!body.price || !body.key) {
@@ -17,25 +17,28 @@ export async function POST(req: NextRequest) {
 
     const { price, key } = body;
 
-    const client = new SignProtocolClient(SpMode.OnChain, {
-        chain: EvmChains.baseSepolia,
-        account: privateKeyToAccount(privateKey)
-    });
+    const chains: {
+        schemaId: string,
+        chain: EvmChains
+    }[] = [
+            { schemaId: "0x1c6", chain: EvmChains.baseSepolia },
+            { schemaId: "0x34", chain: EvmChains.polygonAmoy },
+            { schemaId: "0xdb", chain: EvmChains.sepolia }]
 
-    const res = await client.createAttestation({
-        schemaId: "0xd0",
-        data: { price: price, key: key },
-        //  linked with attesation ID
-        indexingValue: "aaa 111",
-    });
+    const id = nanoid()
+    chains.forEach(async chain => {
+        const client = new SignProtocolClient(SpMode.OnChain, {
+            chain: chain.chain,
+            account: privateKeyToAccount(privateKey)
+        });
 
-    // const res = await delegateSignAttestation( {
-    //     schemaId: "0xd0",
-    //     data: { price: price, key: key },
-    //     indexingValue: "delegateSeller",
-    // }, {
-    //     chain: EvmChains.baseSepolia,
-    //     delegationAccount: privateKeyToAccount(privateKey), 
-    // });
-    return NextResponse.json(res);
+        const res = await client.createAttestation({
+            schemaId: chain.schemaId,
+            data: { price: price, key: key, id },
+            indexingValue: id,
+        });
+
+        console.log(chain.chain, res.attestationId)
+    })
+    return NextResponse.json({ message: "success" });
 }
