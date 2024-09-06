@@ -29,7 +29,6 @@ task("transferCCIPFee", "Transfer tokens using CCIP")
 
         const tx = await tokenTransferor.transferTokensPayLINK(
             taskArgs.destinationChainSelector,
-            usdcContractAddress,
             amount,
             BigInt(taskArgs.attestationId)
         ).catch((error) => {

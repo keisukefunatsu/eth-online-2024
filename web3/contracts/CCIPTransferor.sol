@@ -39,7 +39,7 @@ contract TokenTransferor is OwnerIsCreator {
     IRouterClient private s_router;
 
     IERC20 private s_linkToken;
-
+    address public token;
     // sp contract address
     ISP public spContract;
     // schemaId for attestation
@@ -52,12 +52,14 @@ contract TokenTransferor is OwnerIsCreator {
         address _router,
         address _link,
         address _spContractAddress,
-        uint64 _schemaId
+        uint64 _schemaId,
+        address _token
     ) {
         s_router = IRouterClient(_router);
         s_linkToken = IERC20(_link);
         spContract = ISP(_spContractAddress);
         schemaId = _schemaId;
+        token = _token;
     }
 
     /// @dev Modifier that checks if the chain with the given destinationChainSelector is allowlisted.
@@ -92,12 +94,10 @@ contract TokenTransferor is OwnerIsCreator {
     /// @notice This function can only be called by the owner.
     /// @dev Assumes your contract has sufficient LINK tokens to pay for the fees.
     /// @param _destinationChainSelector The identifier (aka selector) for the destination blockchain.
-    /// @param _token token address.
     /// @param _amount token amount.
     /// @return messageId The ID of the message that was sent.
     function transferTokensPayLINK(
         uint64 _destinationChainSelector,
-        address _token,
         uint256 _amount,
         uint64 attestationId
     )
@@ -117,13 +117,13 @@ contract TokenTransferor is OwnerIsCreator {
         paymentAddress = _paymentAddress;
 
         // get token balance
-        uint256 initialBalance = IERC20(_token).balanceOf(address(this));
+        uint256 initialBalance = IERC20(token).balanceOf(address(this));
 
         // transfer ERC20 token
-        IERC20(_token).transferFrom(msg.sender, address(this), price);
+        IERC20(token).transferFrom(msg.sender, address(this), price);
 
         // calculate token amount sent
-        uint256 finalBalance = IERC20(_token).balanceOf(address(this));
+        uint256 finalBalance = IERC20(token).balanceOf(address(this));
         uint256 amount = finalBalance - initialBalance;
 
         // confirm that the amount is greater than or equal to the price
@@ -133,7 +133,7 @@ contract TokenTransferor is OwnerIsCreator {
         //  address(linkToken) means fees are paid in LINK
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
             paymentAddress,
-            _token,
+            token,
             _amount,
             address(s_linkToken)
         );
@@ -151,7 +151,7 @@ contract TokenTransferor is OwnerIsCreator {
         s_linkToken.approve(address(s_router), fees);
 
         // approve the Router to spend tokens on contract's behalf. It will spend the amount of the given token
-        IERC20(_token).approve(address(s_router), _amount);
+        IERC20(token).approve(address(s_router), _amount);
 
         // Send the message through the router and store the returned message ID
         messageId = s_router.ccipSend(
@@ -190,7 +190,7 @@ contract TokenTransferor is OwnerIsCreator {
             messageId,
             _destinationChainSelector,
             paymentAddress,
-            _token,
+            token,
             _amount,
             address(s_linkToken),
             fees
