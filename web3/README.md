@@ -6,7 +6,12 @@ yarn hardhat run scripts/setupCCIP.ts --network sepolia
 ```
 
 ```shell
-yarn hardhat transferCCIPFee --network sepolia --token-transferor-address 0xC72f2a1c5A87937735cCd702494C712AEF99216B --receiver 0x33b926d2B21972464198b9c89B34fE9BA831Cb14 --token 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 --amount 100
+yarn hardhat transferCCIPFee --network sepolia \
+--destination-chain-selector 10344971235874465080 \
+--token-transferor-address 0x767ABdf36dbF323F41d6049B27eD052e407A15E9 \
+--token 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 \
+--amount 0.001 \
+--attestation-id 0x1a5
 ```
 
 ## Links

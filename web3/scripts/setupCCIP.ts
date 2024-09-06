@@ -4,21 +4,27 @@ import { CCIP_PARAMS } from './params/CCIPParams';
 async function main() {
     const [deployer] = await hre.ethers.getSigners();
     Object.entries(CCIP_PARAMS).forEach(async ([chainId, params]) => {
-        const { CHAIN_NAME, DESTINATION_CHAIN_SELECTOR, ROUTER_ADDRESS, LINK_TOKEN_ADDRESS, USDC_TOKEN_ADDRESS } = params;
+        const { CHAIN_NAME, DESTINATION_CHAIN_SELECTOR, ROUTER_ADDRESS, LINK_TOKEN_ADDRESS, SP_CONTRACT_ADDRESS } = params;
         const _chainId = hre.network.config.chainId;
         if (_chainId?.toString() !== chainId) {
             return
         }
 
-        console.log(`Deploying on ${CHAIN_NAME} with account: ${await deployer.getAddress()}`);
-
+        console.log(`Deploying on ${CHAIN_NAME} with account: ${await deployer.getAddress()}`);        
+        const schemaId = BigInt(0xdf);
+        const spContractAddress = SP_CONTRACT_ADDRESS
         // Deploy token transferor
         const TokenTransferor = await hre.ethers.getContractFactory("TokenTransferor");
-        const tokenTransferor = await TokenTransferor.deploy(ROUTER_ADDRESS, LINK_TOKEN_ADDRESS!);
+        const tokenTransferor = await TokenTransferor.deploy(
+            ROUTER_ADDRESS,
+            LINK_TOKEN_ADDRESS!,
+            spContractAddress,
+            schemaId
+        );
         const deployResult = await tokenTransferor.waitForDeployment();
         console.log(`TokenTransferor deployed to: ${await deployResult.getAddress()} on ${CHAIN_NAME}`);
 
-        
+
         // Allow all destination chain selectors
         for (const [, chainParams] of Object.entries(CCIP_PARAMS)) {
             if (chainParams.DESTINATION_CHAIN_SELECTOR !== DESTINATION_CHAIN_SELECTOR) {
@@ -28,10 +34,11 @@ async function main() {
         }
 
         // send LINK token for fee token
-        const linkAmount = hre.ethers.parseUnits("0.5", 18); 
-        const linkToken = await hre.ethers.getContractAt("IERC20", LINK_TOKEN_ADDRESS);
+        const linkTokenAbi = ["function transfer(address to, uint amount)"];
+        const linkAmount = hre.ethers.parseUnits("0.5", 18);
+        const linkToken = await hre.ethers.getContractAt(linkTokenAbi, LINK_TOKEN_ADDRESS);
         await linkToken.transfer(await tokenTransferor.getAddress(), linkAmount);
-        console.log(`Transferred ${hre.ethers.formatUnits(linkAmount, 18)} LINK to TokenTransferor contract`);        
+        console.log(`Transferred ${hre.ethers.formatUnits(linkAmount, 18)} LINK to TokenTransferor contract`);
     });
 }
 

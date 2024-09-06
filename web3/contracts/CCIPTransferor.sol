@@ -33,11 +33,9 @@ contract TokenTransferor is OwnerIsCreator {
         uint256 fees // The fees paid for sending the message.
     );
 
-    // send token to this address
-    address paymentAddress;
     // Mapping to keep track of allowlisted destination chains.
     mapping(uint64 => bool) public allowlistedChains;
-
+    address public paymentAddress;
     IRouterClient private s_router;
 
     IERC20 private s_linkToken;
@@ -53,13 +51,11 @@ contract TokenTransferor is OwnerIsCreator {
     constructor(
         address _router,
         address _link,
-        address _paymentAddress,
         address _spContractAddress,
         uint64 _schemaId
     ) {
         s_router = IRouterClient(_router);
         s_linkToken = IERC20(_link);
-        paymentAddress = _paymentAddress;
         spContract = ISP(_spContractAddress);
         schemaId = _schemaId;
     }
@@ -103,15 +99,36 @@ contract TokenTransferor is OwnerIsCreator {
         uint64 _destinationChainSelector,
         address _token,
         uint256 _amount,
-        address sign_to,
         uint64 attestationId
     )
         external
         onlyOwner
         onlyAllowlistedChain(_destinationChainSelector)
-        validateReceiver(paymentAddress)
         returns (bytes32 messageId)
     {
+        Attestation memory attestation = spContract.getAttestation(
+            attestationId
+        );
+
+        (uint256 price, string memory key, string memory id, address _paymentAddress) = abi.decode(
+            attestation.data,
+            (uint256, string, string, address)
+        );
+        paymentAddress = _paymentAddress;
+
+        // get token balance
+        uint256 initialBalance = IERC20(_token).balanceOf(address(this));
+
+        // transfer ERC20 token
+        IERC20(_token).transferFrom(msg.sender, address(this), price);
+
+        // calculate token amount sent
+        uint256 finalBalance = IERC20(_token).balanceOf(address(this));
+        uint256 amount = finalBalance - initialBalance;
+
+        // confirm that the amount is greater than or equal to the price
+        require(price <= amount, "Amount must be greater than or equal to price");
+
         // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
         //  address(linkToken) means fees are paid in LINK
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
@@ -133,9 +150,6 @@ contract TokenTransferor is OwnerIsCreator {
         // approve the Router to transfer LINK tokens on contract's behalf. It will spend the fees in LINK
         s_linkToken.approve(address(s_router), fees);
 
-        // transfer the tokens from the sender to the contract(approve required)
-        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
-
         // approve the Router to spend tokens on contract's behalf. It will spend the amount of the given token
         IERC20(_token).approve(address(s_router), _amount);
 
@@ -145,19 +159,10 @@ contract TokenTransferor is OwnerIsCreator {
             evm2AnyMessage
         );
 
-        Attestation memory attestation = spContract.getAttestation(
-            attestationId
-        );
-
-        (uint256 price, string memory key, string memory id) = abi.decode(
-            attestation.data,
-            (uint256, string, string)
-        );
-
         // Create a new attestation
-        bytes memory newData = abi.encode(id);
+        bytes memory newData = abi.encode(key, id);
         bytes[] memory recipients = new bytes[](1);
-        recipients[0] = abi.encode(sign_to);
+        recipients[0] = abi.encode(msg.sender);
         Attestation memory newAttestation = Attestation({
             schemaId: schemaId,
             attester: address(this),

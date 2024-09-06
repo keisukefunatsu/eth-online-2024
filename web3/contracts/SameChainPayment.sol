@@ -15,14 +15,13 @@ contract AttestTest {
     event DebugUint256(uint256 value);
     event DebugString(string value);
 
-    constructor(address _spContractAddress) {
+    constructor(address _spContractAddress, uint64 _schemaId) {
         spContract = ISP(_spContractAddress);
-        schemaId = 456;
+        schemaId = _schemaId;
     }
 
     function testFlow(
-        uint64 attestationId,
-        address to
+        uint64 attestationId
     ) external returns (uint256, string memory) {
         Attestation memory attestation = spContract.getAttestation(
             attestationId
@@ -36,7 +35,7 @@ contract AttestTest {
         // Create a new attestation
         bytes memory newData = abi.encode(key, id);
         bytes[] memory recipients = new bytes[](1);
-        recipients[0] = abi.encode(to);
+        recipients[0] = abi.encode(msg.sender);
         Attestation memory newAttestation = Attestation({
             schemaId: schemaId,
             attester: address(this),
