@@ -1,6 +1,6 @@
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { DataLocationOnChain, delegateSignAttestation, EvmChains, SignProtocolClient, SpMode } from "@ethsign/sp-sdk";
+import { EvmChains, SignProtocolClient, SpMode } from "@ethsign/sp-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { nanoid } from 'nanoid';
 
@@ -11,19 +11,19 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     const privateKey = '0x' + process.env.PRIVATE_KEY as `0x${string}`
     const body = await req.json();
-    if (!body.price || !body.key) {
-        return NextResponse.json({ error: "price and key are required" }, { status: 400 });
+    if (!body.price || !body.key || !body.paymentAddress) {
+        return NextResponse.json({ error: "price and key and address are required" }, { status: 400 });
     }
 
-    const { price, key } = body;
+    const { price, key, paymentAddress } = body;
 
     const chains: {
         schemaId: string,
         chain: EvmChains
     }[] = [
-            { schemaId: "0x1c6", chain: EvmChains.baseSepolia },
-            { schemaId: "0x34", chain: EvmChains.polygonAmoy },
-            { schemaId: "0xdb", chain: EvmChains.sepolia }]
+            { schemaId: "0x1f3", chain: EvmChains.baseSepolia },
+            { schemaId: "0x50", chain: EvmChains.polygonAmoy },
+            { schemaId: "0x109", chain: EvmChains.sepolia }]
 
     const id = nanoid()
     chains.forEach(async chain => {
@@ -34,10 +34,11 @@ export async function POST(req: NextRequest) {
 
         const res = await client.createAttestation({
             schemaId: chain.schemaId,
-            data: { price: price, key: key, id },
+            data: { price, key, id, paymentAddress },
             indexingValue: id,
+            recipients: [paymentAddress as `0x${string}`]
         });
-
+        
         console.log(chain.chain, res.attestationId)
     })
     return NextResponse.json({ message: "success" });

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
             account: privateKeyToAccount(privateKey)
         });
 
-        // await client.createSchema({
+        // const result = await client.createSchema({
         //     name: "Item",
         //     description: "Item",
         //     dataLocation: DataLocationOnChain.ONCHAIN,
@@ -23,11 +23,12 @@ export async function GET(req: NextRequest) {
         //         { name: "price", type: "uint256" },
         //         { name: "key", type: "string" },
         //         { name: "id", type: "string" },
+        //         { name: "paymentAddress", type: "address" },
         //     ],
         //     registrant: privateKeyToAccount(privateKey).address,
         // })
 
-        await client.createSchema({
+        const result = await client.createSchema({
             name: "OwnedItem",
             description: "OwnedItem",
             dataLocation: DataLocationOnChain.ONCHAIN,
@@ -37,6 +38,7 @@ export async function GET(req: NextRequest) {
             ],
             registrant: privateKeyToAccount(privateKey).address,
         })
+        console.log(result.schemaId)
     })
 
     return NextResponse.json({ message: "success" });
