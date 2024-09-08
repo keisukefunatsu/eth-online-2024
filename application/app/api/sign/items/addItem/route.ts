@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { price, key, paymentAddress } = body;
-
+    const VERSION = "SignEverythingItem_v1"
     const chains: {
         schemaId: string,
         chain: EvmChains
     }[] = [
-            { schemaId: "0x1f3", chain: EvmChains.baseSepolia },
-            { schemaId: "0x50", chain: EvmChains.polygonAmoy },
-            { schemaId: "0x109", chain: EvmChains.sepolia }]
+            { schemaId: "0x26b", chain: EvmChains.baseSepolia },
+            { schemaId: "0x52", chain: EvmChains.polygonAmoy },
+            { schemaId: "0x1bd", chain: EvmChains.sepolia }]
 
     const id = nanoid()
     chains.forEach(async chain => {
@@ -34,8 +34,14 @@ export async function POST(req: NextRequest) {
 
         const res = await client.createAttestation({
             schemaId: chain.schemaId,
-            data: { price, key, id, paymentAddress },
-            indexingValue: id,
+            data: {                 
+                price,
+                key,
+                id,
+                paymentAddress,
+                version: VERSION,
+            },
+            indexingValue: VERSION,
             recipients: [paymentAddress as `0x${string}`]
         });
         

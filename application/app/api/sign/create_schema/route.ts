@@ -19,11 +19,12 @@ export async function GET(req: NextRequest) {
         //     name: "Item",
         //     description: "Item",
         //     dataLocation: DataLocationOnChain.ONCHAIN,
-        //     data: [
+        //     data: [                
         //         { name: "price", type: "uint256" },
         //         { name: "key", type: "string" },
         //         { name: "id", type: "string" },
         //         { name: "paymentAddress", type: "address" },
+        //         { name: "version", type: "string" },
         //     ],
         //     registrant: privateKeyToAccount(privateKey).address,
         // })

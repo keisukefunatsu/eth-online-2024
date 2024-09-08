@@ -96,7 +96,9 @@ export default function Home() {
           </div>
         </aside>
 
-        {connection.isConnected && connection.chainId && <Items initialChainId={connection.chainId.toString()} />}
+        {connection.isConnected && connection.chainId && 
+          <Items initialChainId={connection.chainId.toString()} selectedMenu={selectedMenu} />
+        } 
       </div>
     </div>
   );

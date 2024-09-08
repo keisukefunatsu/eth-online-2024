@@ -1,4 +1,4 @@
-type ChainInfo = {
+export type ChainInfo = {
     CHAIN_NAME: string;
     DESTINATION_CHAIN_SELECTOR: string;
     USDC_TOKEN_ADDRESS: string;
@@ -39,8 +39,5 @@ export const getAddressesByChainId = (chainId: string) => {
     if (!chainInfo) {
         throw new Error(`Chain ID ${chainId} not found in address book`);
     }
-    return {
-        usdcTokenAddress: chainInfo.USDC_TOKEN_ADDRESS,
-        tokenTransferorAddress: chainInfo.TOKEN_TRANSFEROR_ADDRESS
-    };
+    return chainInfo
 };
