@@ -106,7 +106,6 @@ contract TokenTransferor is OwnerIsCreator {
         uint64 attestationId
     )
         external
-        onlyOwner
         onlyAllowlistedChain(_destinationChainSelector)
         returns (bytes32 messageId)
     {
