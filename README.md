@@ -23,3 +23,29 @@ In the purchase process, when the specified token is sent to the Payment Contrac
 Not only does it create an Attestation, but it also uses Hooks to ensure that only transactions audited by addresses on the whitelist (in this case, the Payment Contract) can create Attestations.
 
 The transferred tokens are sent to a predetermined chain using ChainLink CCIP, allowing the design to align with the organization’s operations.
+
+## Architecture
+
+```mermaid
+graph TD
+	User
+	
+	subgraph SignApp
+		Backend
+		PaymentContract
+	end
+	WhiteListContract 
+	subgraph Sign Protocol
+		AttestationContract
+		Explorer
+	end
+	
+	ChainLinkCCIP
+	
+	User --> |Request ShopData|Backend
+	User --> |Pay|PaymentContract
+	Backend --> |Request \n Enroll items|Explorer
+	PaymentContract --> |Attest|AttestationContract
+	PaymentContract --> |Aggregate Crosschain Transaction|ChainLinkCCIP
+	AttestationContract --> |Check Attester|WhiteListContract
+```
