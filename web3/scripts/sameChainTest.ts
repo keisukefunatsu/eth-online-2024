@@ -15,7 +15,8 @@ async function main() {
     const attester = await Attester.deploy(
         spContractAddress, 
         BigInt(0xdf),
-        usdcContractAddress
+        usdcContractAddress,
+        "SignEverythingItem_v1"
     )
     await attester.waitForDeployment()
     console.log('contract deployed to: ', await attester.getAddress())

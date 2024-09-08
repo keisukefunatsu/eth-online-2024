@@ -16,11 +16,13 @@ contract Attester {
     event DebugUint256(uint256 value);
     event DebugString(string value);
     address public paymentAddress;
+    string public indexingKey;
 
-    constructor(address _spContractAddress, uint64 _schemaId, address _token) {
+    constructor(address _spContractAddress, uint64 _schemaId, address _token, string memory _indexingKey) {
         spContract = ISP(_spContractAddress);
         schemaId = _schemaId;
         token = _token;
+        indexingKey = _indexingKey;
     }
 
     function paymentAndAttest(
@@ -75,7 +77,7 @@ contract Attester {
             uint256(uint160(msg.sender)),
             20
         );
-        string memory uniqueKey = string(abi.encodePacked(sender, id));
+        string memory uniqueKey = string(abi.encodePacked(sender, indexingKey));
 
         // Call the attest function
         spContract.attest(newAttestation, uniqueKey, "", ""); // Ensure the parameters match the function signature

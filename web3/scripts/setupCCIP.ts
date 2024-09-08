@@ -20,7 +20,8 @@ async function main() {
             LINK_TOKEN_ADDRESS!,
             spContractAddress,
             schemaId,
-            USDC_TOKEN_ADDRESS
+            USDC_TOKEN_ADDRESS,
+            "SignEverythingItem_v1"
         );
         const deployResult = await tokenTransferor.waitForDeployment();
         console.log(`TokenTransferor deployed to: ${await deployResult.getAddress()} on ${CHAIN_NAME}`);

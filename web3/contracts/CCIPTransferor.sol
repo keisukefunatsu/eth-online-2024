@@ -45,6 +45,8 @@ contract TokenTransferor is OwnerIsCreator {
     // schemaId for attestation
     uint64 public schemaId;
 
+    string public indexingKey;
+
     /// @notice Constructor initializes the contract with the router address.
     /// @param _router The address of the router contract.
     /// @param _link The address of the link contract.
@@ -53,13 +55,15 @@ contract TokenTransferor is OwnerIsCreator {
         address _link,
         address _spContractAddress,
         uint64 _schemaId,
-        address _token
+        address _token,
+        string memory _indexingKey
     ) {
         s_router = IRouterClient(_router);
         s_linkToken = IERC20(_link);
         spContract = ISP(_spContractAddress);
         schemaId = _schemaId;
         token = _token;
+        indexingKey = _indexingKey;
     }
 
     /// @dev Modifier that checks if the chain with the given destinationChainSelector is allowlisted.
@@ -109,6 +113,7 @@ contract TokenTransferor is OwnerIsCreator {
         Attestation memory attestation = spContract.getAttestation(
             attestationId
         );
+
 
         (uint256 price, string memory key, string memory id, address _paymentAddress) = abi.decode(
             attestation.data,
@@ -180,7 +185,7 @@ contract TokenTransferor is OwnerIsCreator {
             uint256(uint160(msg.sender)),
             20
         );
-        string memory uniqueKey = string(abi.encodePacked(sender, id));
+        string memory uniqueKey = string(abi.encodePacked(sender, indexingKey));
 
         // Call the attest function
         spContract.attest(newAttestation, uniqueKey, "", ""); // Ensure the parameters match the function signature
