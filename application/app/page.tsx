@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import Items from '@/app/libs/components/Items';
+import Items from '@/app/components/Items';
 import { useAccount } from 'wagmi';
 
 export default function Home() {

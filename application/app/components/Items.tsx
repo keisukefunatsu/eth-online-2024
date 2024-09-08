@@ -65,6 +65,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
     const [txHash, setTxHash] = useState<string | null>(null);
     const [selectedItem, setSelectedItem] = useState<Attestation | null>(null);
     const [chainInfo, setChainInfo] = useState<ChainInfo | null>(null)
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     if (!address) {
         return <div>Please connect your wallet</div>;
@@ -83,7 +84,6 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
     console.log('approvedAmount', approvedAmount);
 
     const { writeContractAsync, data: hash, isSuccess } = useWriteContract();
-
     useEffect(() => {
         refetchApprovedAmount()
         if (approvedAmountData !== undefined) {
@@ -98,9 +98,30 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
         }
     }, [connectedChainId])
 
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout | null = null;
+
+        if (isModalOpen) {
+            intervalId = setInterval(() => {
+                if (approvedAmount === BigInt(0)) {
+                    refetchApprovedAmount();
+                }
+            }, 1000);
+        } else if (intervalId) {
+            clearInterval(intervalId);
+        }
+
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
+    }, [isModalOpen, approvedAmount, refetchApprovedAmount]);
+
     const handleApprove = async (amount: bigint) => {
         try {
             setProgress(0);
+            setIsLoading(true);
             await writeContractAsync({
                 address: chainInfo?.USDC_TOKEN_ADDRESS as `0x${string}`,
                 abi: erc20Abi,
@@ -110,12 +131,13 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                     amount
                 ]
             });
-            await refetchApprovedAmount();
             setModalMessage('Approval Completed Successfully');
             setProgress(50);
         } catch (error) {
             console.error('Error approving tokens:', error);
             setModalMessage('Approval Failed');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -124,9 +146,9 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
         setProgress(50);
         setModalMessage('Transaction in Progress');
         setTxHash(null);
+        setIsLoading(true);
         const amount = BigInt(item.data.price);
         try {
-            console.log(item.id)
             if (connectedChainId === '11155111') {
                 await writeContractAsync({
                     address: chainInfo?.SAMECHAIN_ATTESTER_ADDRESS as `0x${string}`,
@@ -152,14 +174,23 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
             setProgress(100);
             setModalMessage('Transaction Completed Successfully');
             setTxHash(hash as `0x${string}`);
-            setTimeout(() => setIsModalOpen(false), 3000); // モーダルを3秒後に閉じる
         } catch (error) {
             console.error('Error transferring tokens:', error);
             setProgress(0);
             setModalMessage('Transaction Failed');
-            setTimeout(() => setIsModalOpen(false), 3000); // モーダルを3秒後に閉じる
+        } finally {
+            setIsLoading(false);
         }
     }
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setProgress(0);
+        setModalMessage('');
+        setTxHash(null);
+        setSelectedItem(null);
+        setIsLoading(false);
+    };
 
     useEffect(() => {
         const fetchItems = async () => {
@@ -170,7 +201,6 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                     }
                 });
                 setItems(response.data.attestations);
-                console.log(response.data.attestations)
             } catch (error) {
                 console.error('Error fetching items:', error);
             } finally {
@@ -186,12 +216,10 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                     }
                 });
                 setOwnedItems(response.data.attestations);
-                console.log(response);
             } catch (error) {
                 console.error('Error fetching owned items:', error);
             }
         };
-        console.log('selectedMenu', selectedMenu)
 
         if (selectedMenu === 'ownedItems') {
             fetchOwnedItems();
@@ -283,41 +311,51 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
             </main>
             <Modal
                 isOpen={isModalOpen}
-                onRequestClose={() => setIsModalOpen(false)}
+                onRequestClose={handleCloseModal}
                 contentLabel="Transaction Progress"
                 className="modal"
                 overlayClassName="modal-overlay"
                 shouldCloseOnOverlayClick={true}
             >
-                <h2 className="modal-title">{modalMessage}</h2>
-                <div className="progress-bar">
-                    <div className="progress" style={{ width: `${progress}%` }}></div>
-                </div>
-                {txHash && (
-                    <div className="tx-hash">
-                        <p>Transaction Hash:</p>
-                        <p>{txHash}</p>
-                    </div>
-                )}
-                {selectedItem && (
+                {isLoading ? (
+                    <div className="loading-icon">Loading... Check your wallet to confirm transaction</div>
+                ) : (
                     <>
-                        <button
-                            onClick={() => handleApprove(BigInt(selectedItem.data.price))}
-                            className="modal-button bg-green-500 text-white px-4 py-2 rounded-md"
-                            disabled={approvedAmount !== undefined && approvedAmount >= BigInt(selectedItem.data.price)}
-                        >
-                            Approve USDC
-                        </button>
-                        <button
-                            onClick={() => handleTransfer(selectedItem)}
-                            className="modal-button bg-blue-500 text-white px-4 py-2 rounded-md"
-                            disabled={!approvedAmount || approvedAmount < BigInt(selectedItem.data.price)}
-                        >
-                            Buy
-                        </button>
+                        <h2 className="modal-title">{modalMessage}</h2>
+                        <div className="progress-bar">
+                            <div className="progress" style={{ width: `${progress}%` }}></div>
+                        </div>
+                        {txHash && (
+                            <div className="text-wrap">
+                                <p>Transaction Hash:</p>
+                                <p>{txHash}</p>
+                            </div>
+                        )}
+                        {selectedItem && (
+                            <>
+                                <div className="item-details">
+                                    <p>Buying: {selectedItem.data.key}</p>
+                                    <p>Price: {formatUnits(BigInt(selectedItem.data.price), 6)} USDC</p>
+                                </div>
+                                <button
+                                    onClick={() => handleApprove(BigInt(selectedItem.data.price))}
+                                    className="modal-button bg-green-500 text-white px-4 py-2 rounded-md"
+                                    disabled={approvedAmount !== undefined && approvedAmount >= BigInt(selectedItem.data.price)}
+                                >
+                                    Approve USDC
+                                </button>
+                                <button
+                                    onClick={() => handleTransfer(selectedItem)}
+                                    className="modal-button bg-blue-500 text-white px-4 py-2 rounded-md"
+                                    disabled={!approvedAmount || approvedAmount < BigInt(selectedItem.data.price)}
+                                >
+                                    Buy
+                                </button>
+                            </>
+                        )}
+                        <button onClick={handleCloseModal} className="modal-close-button">Close</button>
                     </>
                 )}
-                <button onClick={() => setIsModalOpen(false)} className="modal-close-button">Close</button>
             </Modal>
         </>
     );
