@@ -25,6 +25,7 @@ import type {
 export interface AttesterInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "indexingKey"
       | "paymentAddress"
       | "paymentAndAttest"
       | "schemaId"
@@ -36,6 +37,10 @@ export interface AttesterInterface extends Interface {
     nameOrSignatureOrTopic: "Debug" | "DebugString" | "DebugUint256"
   ): EventFragment;
 
+  encodeFunctionData(
+    functionFragment: "indexingKey",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "paymentAddress",
     values?: undefined
@@ -51,6 +56,10 @@ export interface AttesterInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "token", values?: undefined): string;
 
+  decodeFunctionResult(
+    functionFragment: "indexingKey",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "paymentAddress",
     data: BytesLike
@@ -143,6 +152,8 @@ export interface Attester extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  indexingKey: TypedContractMethod<[], [string], "view">;
+
   paymentAddress: TypedContractMethod<[], [string], "view">;
 
   paymentAndAttest: TypedContractMethod<
@@ -161,6 +172,9 @@ export interface Attester extends BaseContract {
     key: string | FunctionFragment
   ): T;
 
+  getFunction(
+    nameOrSignature: "indexingKey"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "paymentAddress"
   ): TypedContractMethod<[], [string], "view">;

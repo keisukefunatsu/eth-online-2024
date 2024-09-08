@@ -96,9 +96,9 @@ export default function Home() {
           </div>
         </aside>
 
-        {connection.isConnected && connection.chainId && 
+        {(connection.isConnected && connection.chainId) ?
           <Items initialChainId={connection.chainId.toString()} selectedMenu={selectedMenu} />
-        } 
+        : <div className="flex flex-1 justify-center items-center">Connect your wallet to view items</div>}  
       </div>
     </div>
   );

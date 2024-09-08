@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { erc20Abi, formatUnits } from 'viem';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import React from 'react';
-import { TokenTransferor__factory } from '@/app/typechain';
+import { Attester__factory, TokenTransferor__factory, } from '@/app/typechain';
 import Modal from 'react-modal';
 
 // DestinationChain is sepolia
@@ -74,20 +74,23 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
         abi: erc20Abi,
         address: chainInfo?.USDC_TOKEN_ADDRESS as `0x${string}`,
         functionName: 'allowance',
-        args: [address, chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`]
+        args: [address,
+            connectedChainId?.toString() === '11155111' ? chainInfo?.SAMECHAIN_ATTESTER_ADDRESS as `0x${string}` : chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`
+        ]
     });
 
     const [approvedAmount, setApprovedAmount] = useState<bigint | undefined>(undefined);
     console.log('approvedAmount', approvedAmount);
 
-    const { writeContractAsync, data: hash } = useWriteContract();
+    const { writeContractAsync, data: hash, isSuccess } = useWriteContract();
 
     useEffect(() => {
+        refetchApprovedAmount()
         if (approvedAmountData !== undefined) {
             setApprovedAmount(approvedAmountData);
             console.log('approvedAmount changed:', approvedAmountData);
         }
-    }, [approvedAmountData]);
+    }, [approvedAmountData, isSuccess]);
 
     useEffect(() => {
         if (connectedChainId) {
@@ -103,7 +106,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                 abi: erc20Abi,
                 functionName: 'approve',
                 args: [
-                    chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`,
+                    connectedChainId?.toString() === '11155111' ? chainInfo?.SAMECHAIN_ATTESTER_ADDRESS as `0x${string}` : chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`,
                     amount
                 ]
             });
@@ -123,16 +126,29 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
         setTxHash(null);
         const amount = BigInt(item.data.price);
         try {
-            const tx = await writeContractAsync({
-                address: chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`,
-                abi: TokenTransferor__factory.abi,
-                functionName: 'transferTokensPayLINK',
-                args: [
-                    BigInt(destinationChainSelector),
-                    amount,
-                    BigInt(extractHex(item.id))
-                ],
-            });
+            console.log(item.id)
+            if (connectedChainId === '11155111') {
+                await writeContractAsync({
+                    address: chainInfo?.SAMECHAIN_ATTESTER_ADDRESS as `0x${string}`,
+                    abi: Attester__factory.abi,
+                    functionName: 'paymentAndAttest',
+                    args: [
+                        BigInt(extractHex(item.id))
+                    ],
+                });
+            } else {
+                await writeContractAsync({
+                    address: chainInfo?.TOKEN_TRANSFEROR_ADDRESS as `0x${string}`,
+                    abi: TokenTransferor__factory.abi,
+                    functionName: 'transferTokensPayLINK',
+                    args: [
+                        BigInt(destinationChainSelector),
+                        amount,
+                        BigInt(extractHex(item.id))
+                    ],
+                });
+            }
+
             setProgress(100);
             setModalMessage('Transaction Completed Successfully');
             setTxHash(hash as `0x${string}`);
@@ -175,7 +191,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                 console.error('Error fetching owned items:', error);
             }
         };
-        console.log('selectedMenu',selectedMenu)
+        console.log('selectedMenu', selectedMenu)
 
         if (selectedMenu === 'ownedItems') {
             fetchOwnedItems();
@@ -209,7 +225,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                 {(selectedMenu === 'shops' || !selectedMenu) && (
                     filteredItems.length > 0 ? filteredItems.map((item) => (
                         <div
-                            key={`shop-${item.data.id}`}
+                            key={`shop-${item.data.id}-${item.chainId}`}
                             className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center hover:shadow-xl transition-shadow duration-200 w-full h-80"
                         >
                             <div className="relative w-full h-3/4 mb-4 flex items-center justify-center">
@@ -233,7 +249,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                 {selectedMenu === 'ownedItems' && (
                     ownedItems.length > 0 ? ownedItems.map((item) => (
                         <div
-                            key={`owned-${item.data.id}`}
+                            key={`owned-${item.data.id}-${item.chainId}`}
                             className="bg-white rounded-lg shadow-lg p-4 flex flex-col items-center hover:shadow-xl transition-shadow duration-200 w-full h-80"
                         >
                             <div className="relative w-full h-3/4 mb-4 flex items-center justify-center">
@@ -245,9 +261,9 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                             <div className="font-semibold text-gray-800 text-center">
                                 {item.data.key}
                             </div>
-                            <Link 
-                                href={`https://testnet-scan.sign.global/attestation/${item.id}`} 
-                                target="_blank" 
+                            <Link
+                                href={`https://testnet-scan.sign.global/attestation/${item.id}`}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-500 underline"
                             >
@@ -280,7 +296,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                         <button
                             onClick={() => handleApprove(BigInt(selectedItem.data.price))}
                             className="modal-button bg-green-500 text-white px-4 py-2 rounded-md"
-                            disabled={approvedAmount && approvedAmount >= BigInt(selectedItem.data.price)}
+                            disabled={approvedAmount !== undefined && approvedAmount >= BigInt(selectedItem.data.price)}
                         >
                             Approve USDC
                         </button>

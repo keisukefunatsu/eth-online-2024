@@ -29,6 +29,7 @@ export interface TokenTransferorInterface extends Interface {
       | "acceptOwnership"
       | "allowlistDestinationChain"
       | "allowlistedChains"
+      | "indexingKey"
       | "owner"
       | "paymentAddress"
       | "schemaId"
@@ -58,6 +59,10 @@ export interface TokenTransferorInterface extends Interface {
   encodeFunctionData(
     functionFragment: "allowlistedChains",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "indexingKey",
+    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -97,6 +102,10 @@ export interface TokenTransferorInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "allowlistedChains",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "indexingKey",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -239,6 +248,8 @@ export interface TokenTransferor extends BaseContract {
     "view"
   >;
 
+  indexingKey: TypedContractMethod<[], [string], "view">;
+
   owner: TypedContractMethod<[], [string], "view">;
 
   paymentAddress: TypedContractMethod<[], [string], "view">;
@@ -294,6 +305,9 @@ export interface TokenTransferor extends BaseContract {
   getFunction(
     nameOrSignature: "allowlistedChains"
   ): TypedContractMethod<[arg0: BigNumberish], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "indexingKey"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;

@@ -40,5 +40,3 @@ export type { TokenTransferor } from "./contracts/CCIPTransferor.sol/TokenTransf
 export { TokenTransferor__factory } from "./factories/contracts/CCIPTransferor.sol/TokenTransferor__factory";
 export type { Attester } from "./contracts/SameChainPayment.sol/Attester";
 export { Attester__factory } from "./factories/contracts/SameChainPayment.sol/Attester__factory";
-export type { AttestTest } from "./contracts/SameChainPayment.sol/AttestTest";
-export { AttestTest__factory } from "./factories/contracts/SameChainPayment.sol/AttestTest__factory";

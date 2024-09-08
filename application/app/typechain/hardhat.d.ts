@@ -77,10 +77,6 @@ declare module "hardhat/types/runtime" {
       name: "Attester",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Attester__factory>;
-    getContractFactory(
-      name: "AttestTest",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.AttestTest__factory>;
 
     getContractAt(
       name: "IRouterClient",
@@ -162,11 +158,6 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.Attester>;
-    getContractAt(
-      name: "AttestTest",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.AttestTest>;
 
     deployContract(
       name: "IRouterClient",
@@ -232,10 +223,6 @@ declare module "hardhat/types/runtime" {
       name: "Attester",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Attester>;
-    deployContract(
-      name: "AttestTest",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AttestTest>;
 
     deployContract(
       name: "IRouterClient",
@@ -317,11 +304,6 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.Attester>;
-    deployContract(
-      name: "AttestTest",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.AttestTest>;
 
     // default types
     getContractFactory(
