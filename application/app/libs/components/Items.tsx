@@ -240,6 +240,14 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                             <div className="font-semibold text-gray-800 text-center">
                                 {formatUnits(BigInt(item.data.price), 6)} USDC
                             </div>
+                            <Link
+                                href={`https://testnet-scan.sign.global/attestation/${item.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 underline"
+                            >
+                                View Item Signature
+                            </Link>
                             <button onClick={() => { setIsModalOpen(true); setSelectedItem(item); }} className="bg-blue-500 text-white px-4 py-2 rounded-md">
                                 Buy
                             </button>
@@ -267,7 +275,7 @@ const Items: React.FC<ItemsProps> = ({ initialChainId, selectedMenu }) => {
                                 rel="noopener noreferrer"
                                 className="text-blue-500 underline"
                             >
-                                View Signature
+                                View Owned Item Signature
                             </Link>
                         </div>
                     )) : <div>No owned items available.</div>
