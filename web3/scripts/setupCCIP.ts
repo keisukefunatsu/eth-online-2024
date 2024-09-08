@@ -34,7 +34,6 @@ async function main() {
         const deployResult = await tokenTransferor.waitForDeployment();
         console.log(`TokenTransferor deployed to: ${await deployResult.getAddress()} on ${CHAIN_NAME}`);
 
-
         // Allow all destination chain selectors
         for (const [, chainParams] of Object.entries(CCIP_PARAMS)) {
             if (chainParams.DESTINATION_CHAIN_SELECTOR !== DESTINATION_CHAIN_SELECTOR) {
