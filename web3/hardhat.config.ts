@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
             accounts: [`0x${PRIVATE_KEY}`],
         },
         sepolia: {
-            url: "https://rpc.sepolia.org",
+            url: "https://1rpc.io/sepolia",
             chainId: 11155111,
             accounts: [`0x${PRIVATE_KEY}`],
         },

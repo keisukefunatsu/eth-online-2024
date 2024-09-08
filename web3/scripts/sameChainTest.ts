@@ -10,13 +10,14 @@ async function main() {
     }
     const usdcContractAddress = CCIP_PARAMS[chainId].USDC_TOKEN_ADDRESS
     const spContractAddress = CCIP_PARAMS[chainId].SP_CONTRACT_ADDRESS
+    const ownedItemSchema = CCIP_PARAMS[chainId].OWNED_ITEM_SCHEMA_ID
     console.log(`Using account: ${await deployer.getAddress()}`);
     const Attester = await hre.ethers.getContractFactory('Attester')
     const attester = await Attester.deploy(
         spContractAddress, 
-        BigInt(0xdf),
+        BigInt(ownedItemSchema),
         usdcContractAddress,
-        "SignEverythingItem_v1"
+        "_SignEverythingOwnedItem_v1"
     )
     await attester.waitForDeployment()
     console.log('contract deployed to: ', await attester.getAddress())
