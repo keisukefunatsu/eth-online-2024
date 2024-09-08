@@ -21,28 +21,28 @@ async function main() {
     await attester.waitForDeployment()
     console.log('contract deployed to: ', await attester.getAddress())
 
-    const amount = hre.ethers.parseUnits('0.001', 6)
+    // const amount = hre.ethers.parseUnits('0.001', 6)
 
-    // USDC contract approval
-    const abi = ["function transfer(address to, uint amount)", "function approve(address spender, uint amount)"];        
-    const usdcContract = await hre.ethers.getContractAt(abi, usdcContractAddress);
-    console.log(`Approving ${amount} USDC(in uint) for TokenTransferor contract`);
-    const approveTx = await usdcContract.approve(await attester.getAddress(), amount);
-    console.log(`Approval transaction sent: ${approveTx.hash}`);
-    await approveTx.wait();
-    console.log("Approval transaction confirmed");
+    // // USDC contract approval
+    // const abi = ["function transfer(address to, uint amount)", "function approve(address spender, uint amount)"];        
+    // const usdcContract = await hre.ethers.getContractAt(abi, usdcContractAddress);
+    // console.log(`Approving ${amount} USDC(in uint) for TokenTransferor contract`);
+    // const approveTx = await usdcContract.approve(await attester.getAddress(), amount);
+    // console.log(`Approval transaction sent: ${approveTx.hash}`);
+    // await approveTx.wait();
+    // console.log("Approval transaction confirmed");
 
-    const tx = await attester.paymentAndAttest(
-        BigInt(0x1a5),
-    ).catch((error) => {
-        console.log(error)
-    }).then()
+    // const tx = await attester.paymentAndAttest(
+    //     BigInt(0x1a5),
+    // ).catch((error) => {
+    //     console.log(error)
+    // }).then()
     
-    if (tx) {
-        console.log(`Transaction sent: ${tx.hash}`);
-        await tx.wait();
-        console.log("Transaction confirmed");
-    }
+    // if (tx) {
+    //     console.log(`Transaction sent: ${tx.hash}`);
+    //     await tx.wait();
+    //     console.log("Transaction confirmed");
+    // }
     
 }
 
